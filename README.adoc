@@ -1,0 +1,457 @@
+NotesMongoDB
+------------
+
+Install
+~~~~~~~
+
+https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/#install-mongodb-community-edition-using-deb-packages[Install Mongo on Ubuntu]
+
+https://www.mongodb.com/download-center/community[MongoDB community]
+
+To test if the database are installed you can check by running:
+
+[source,bash]
+----
+mongod --version
+----
+
+Start database
+~~~~~~~~~~~~~~
+
+By default uses /data/db as the storage path, if follow this standard
+you can start database without any arguments. Run this on terminal:
+
+[source,bash]
+----
+mongod --dbpath "my/new/path"
+----
+
+or
+
+[source,bash]
+----
+mongod
+----
+
+Use mongo
+~~~~~~~~~
+
+From another terminal run:
+
+[source,mongo]
+----
+mongo --port <port_where_database_are>
+----
+
+Example:
+
+[source,bash]
+----
+mongo --port 27018
+----
+
+Database infos
+~~~~~~~~~~~~~~
+
+[source,mongo]
+----
+show dbs
+----
+
+Create new database
+~~~~~~~~~~~~~~~~~~~
+
+[source,mongo]
+----
+use <name_of_new_database>
+----
+
+example:
+
+[source,mongo]
+----
+use shop
+----
+
+CRUD operations
+~~~~~~~~~~~~~~~
+
+* Create:
++
+[source,mongo]
+----
+insertOne(data, options)
+----
++
+[source,mongo]
+----
+insertMany(data, options)
+----
+* Read:
++
+[source,mongo]
+----
+find(filter, options)
+----
++
+[source,mongo]
+----
+findOne(filter, options)
+----
+* Update:
++
+[source,mongo]
+----
+updateOne(filter, data, options)
+----
++
+[source,mongo]
+----
+updateMany(filter, data, options)
+----
++
+[source,mongo]
+----
+replaceOne(filter, data, options)
+----
+* Delete:
++
+[source,mongo]
+----
+deleteOne(filter, options)
+----
++
+[source,mongo]
+----
+deleteMany(filter, options)
+----
+
+Insert data to database
+~~~~~~~~~~~~~~~~~~~~~~~
+
+[source,mongo]
+----
+db.<name_of_data>.insertOne({"key0":value0, key1:value1})
+----
+
+The values type can be:
+
+* *String* e.g. ``key'': ``some strings''
+* *Number* e.g. ``key'': 1234
+* *Boolean* e.g. ``key'': false
+* *Object* e.g. ``key'': \{``other_key'': ``some string value''}
+* *Array* e.g. ``key'': [``string'', ``other string'']
+
+example:
+
+[source,mongo]
+----
+db.products.insertOne({
+    name: "computer",
+    price: 100.999,
+    description: "This is a high value product.",
+    details:{
+        cpu: "Intel i7",
+        "memory": "32"
+    }
+})
+----
+
+Insert many datas to database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[source,mongo]
+----
+db.<name_of_data>.insertMany([
+    {
+        "key0":"value0",
+        key1:"value1"
+    },
+    {
+        "key2":"value2",
+        key3:"value3"
+    }
+])
+----
+
+example:
+
+[source,mongo]
+----
+db.flightData.insertMany([
+    {
+        "departureAirport": "MUC",
+        "arrivalAirport": "SFO",
+        "aircraft": "Airbus A380",
+        "distance": 12000,
+        "intercontinental": true
+    },
+    {
+        "departureAirport": "LHR",
+        "arrivalAirport": "TXL",
+        "aircraft": "Airbus A320",
+        "distance": 950,
+        "intercontinental": false
+    }
+])
+----
+
+Retrive data from database
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Find
+^^^^
+
+[source,mongo]
+----
+db.<name_of_data>.find(filters, options)
+----
+
+To beautify the results it can be use the pretty function:
+
+[source,mongo]
+----
+db.<name_of_data>.find(filter, options).pretty()
+----
+
+example:
+
+[source,mongo]
+----
+db.products.find().pretty()
+----
+
+[source,mongo]
+----
+db.<name_of_data>.find({intercontinental: true}).pretty()
+----
+
+[source,mongo]
+----
+db.flightData.find({distance:{$gt:100}}).pretty()
+----
+
+[source,mongo]
+----
+db.passengers.find().toArray()
+----
+
+[source,mongo]
+----
+db.passengers.find().forEach((passengerData) => {printjson(passengerData)})
+----
+
+The use of find below is called projection:
+
+[source,mongo]
+----
+db.passengers.find({}, {name:1}).pretty()
+----
+
+FindOne
+^^^^^^^
+
+[source,mongo]
+----
+db.<name_of_data>.findOne()
+----
+
+example:
+
+[source,mongo]
+----
+db.flightData.findOne({distance:{$gt:100}})
+----
+
+Accessing structured datas
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+E.G. 1
+^^^^^^
+
+[source,mongo]
+----
+db.passengers.findOne({name: "Albert Twostone"}).hobbies
+----
+
+Output:
+
+[source,mongo]
+----
+["sports", "cooking"]
+----
+
+E.G. 2
+^^^^^^
+
+[source,mongo]
+----
+db.flightData.find({"status.details.responsible": "Max Schwarzmuller"}).pretty()
+----
+
+Output:
+
+[source,json]
+----
+{
+    "_id" : ObjectId("5d09ef2276acd23a2e3fb02b"),
+    "departureAirport" : "MUC",
+    "arrivalAirport" : "SFO",
+    "aircraft" : "Airbus A380",
+    "distance" : 12000,
+    "intercontinental" : true,
+    "status" : {
+        "description" : "on-time",
+        "lastUpdated" : "1 hour ago",
+        "details" : {
+            "responsible" : "Max Schwarzmuller"
+        }
+    }
+}
+{
+    "_id" : ObjectId("5d09ef2276acd23a2e3fb02c"),
+    "departureAirport" : "LHR",
+    "arrivalAirport" : "TXL",
+    "aircraft" : "Airbus A320",
+    "distance" : 950,
+    "intercontinental" : false,
+    "status" : {
+        "description" : "on-time",
+        "lastUpdated" : "1 hour ago",
+        "details" : {
+            "responsible" : "Max Schwarzmuller"
+        }
+    }
+}
+----
+
+Delete data from database
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[source,mongo]
+----
+db.<name_of_data>.deleteOne({key_filter: value_filter})
+----
+
+example:
+
+[source,mongo]
+----
+db.fightData.deleteOne({departureAirport: "1"})
+----
+
+[source,mongo]
+----
+db.fightData.deleteMany({marker: "toDelete"})
+----
+
+[source,mongo]
+----
+db.fightData.deleteMany({})
+----
+
+Update data
+~~~~~~~~~~~
+
+Be worry about the update function, the first one replace all the
+filtered data:
+
+[source,mongo]
+----
+db.<name_of_data>.update(
+    {key_filter: value_filter},
+    {key_update: value_update}
+)
+----
+
+This second type of update need a option:
+
+[source,mongo]
+----
+db.<name_of_data>.updateOne(
+    {key_filter: value_filter},
+    {$option: {key_update: value_update}}
+)
+----
+
+example:
+
+[source,mongo]
+----
+db.flightData.updateOne(
+    {departureAirport:"123"},
+    {$set:{marker: 'delete'}}
+)
+----
+
+[source,mongo]
+----
+db.flightData.updateMany(
+    {},
+    {$set: {
+        marker: 'toDelete'
+    }}
+)
+----
+
+[source,mongo]
+----
+db.flightData.update(
+    {"_id":ObjectId("5d09ef2276acd23a2e3fb02b")},
+    {delayed:false}
+)
+----
+
+Replace Data
+~~~~~~~~~~~~
+
+[source,mongo]
+----
+db.<name_of_data>.replaceOne(filter, options)
+----
+
+example:
+
+[source,mongo]
+----
+db.flightData.replaceOne(
+    {"_id": ObjectId("5d09ef2276acd23a2e3fb02b")},
+    {
+        "departureAirport": "MUC",
+        "arrivalAirport": "SFO",
+        "aircraft": "Airbus A380",
+        "distance": 12000,
+        "intercontinental": true
+    }
+)
+----
+
+Nested documents
+~~~~~~~~~~~~~~~~
+
+[source,mongo]
+----
+db.flightData.updateMany(
+    {},
+    {$set: {
+        status: {
+            description: "on-time",
+            lastUpdated: "1 hour ago",
+            details: {
+                responsible: "Max Schwarzmuller"
+            }
+        }
+    }}
+)
+----
+
+Embedded documents and max document value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In MongoDB it’s possible to have at least 100 levels of nesting.
+Documents have a maximum size of 16MB.
+
+Mongo drivers
+~~~~~~~~~~~~~
+
+https://docs.mongodb.com/ecosystem/drivers/
