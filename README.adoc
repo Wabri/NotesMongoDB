@@ -1,12 +1,10 @@
-NotesMongoDB
-------------
+= NotesMongoDB
 
-Install
-~~~~~~~
+== Install
 
-https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/#install-mongodb-community-edition-using-deb-packages[Install Mongo on Ubuntu]
+TIP: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/#install-mongodb-community-edition-using-deb-packages[Install Mongo on Ubuntu]
 
-https://www.mongodb.com/download-center/community[MongoDB community]
+TIP: https://www.mongodb.com/download-center/community[MongoDB server community edition]
 
 To test if the database are installed you can check by running:
 
@@ -15,8 +13,7 @@ To test if the database are installed you can check by running:
 mongod --version
 ----
 
-Start database
-~~~~~~~~~~~~~~
+== Start database
 
 By default uses /data/db as the storage path, if follow this standard
 you can start database without any arguments. Run this on terminal:
@@ -33,8 +30,7 @@ or
 mongod
 ----
 
-Use mongo
-~~~~~~~~~
+== Use mongo
 
 From another terminal run:
 
@@ -50,16 +46,14 @@ Example:
 mongo --port 27018
 ----
 
-Database infos
-~~~~~~~~~~~~~~
+== Database infos
 
 [source,mongo]
 ----
 show dbs
 ----
 
-Create new database
-~~~~~~~~~~~~~~~~~~~
+== Create new database
 
 [source,mongo]
 ----
@@ -73,8 +67,7 @@ example:
 use shop
 ----
 
-CRUD operations
-~~~~~~~~~~~~~~~
+== CRUD operations
 
 * Create:
 +
@@ -126,8 +119,7 @@ deleteOne(filter, options)
 deleteMany(filter, options)
 ----
 
-Insert data to database
-~~~~~~~~~~~~~~~~~~~~~~~
+== Insert data to database
 
 [source,mongo]
 ----
@@ -136,11 +128,11 @@ db.<name_of_data>.insertOne({"key0":value0, key1:value1})
 
 The values type can be:
 
-* *String* e.g. ``key'': ``some strings''
-* *Number* e.g. ``key'': 1234
-* *Boolean* e.g. ``key'': false
-* *Object* e.g. ``key'': \{``other_key'': ``some string value''}
-* *Array* e.g. ``key'': [``string'', ``other string'']
+* *String*
+* *Number*
+* *Boolean*
+* *Object*
+* *Array*
 
 example:
 
@@ -152,13 +144,13 @@ db.products.insertOne({
     description: "This is a high value product.",
     details:{
         cpu: "Intel i7",
-        "memory": "32"
+        "memory": "32",
+		stored: true
     }
 })
 ----
 
-Insert many datas to database
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Insert many datas to database
 
 [source,mongo]
 ----
@@ -196,11 +188,9 @@ db.flightData.insertMany([
 ])
 ----
 
-Retrive data from database
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Retrive data from database
 
-Find
-^^^^
+=== Find
 
 [source,mongo]
 ----
@@ -248,8 +238,7 @@ The use of find below is called projection:
 db.passengers.find({}, {name:1}).pretty()
 ----
 
-FindOne
-^^^^^^^
+=== FindOne
 
 [source,mongo]
 ----
@@ -263,11 +252,9 @@ example:
 db.flightData.findOne({distance:{$gt:100}})
 ----
 
-Accessing structured datas
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Accessing structured datas
 
-E.G. 1
-^^^^^^
+=== E.G. 1
 
 [source,mongo]
 ----
@@ -281,8 +268,7 @@ Output:
 ["sports", "cooking"]
 ----
 
-E.G. 2
-^^^^^^
+=== E.G. 2
 
 [source,mongo]
 ----
@@ -325,8 +311,7 @@ Output:
 }
 ----
 
-Delete data from database
-~~~~~~~~~~~~~~~~~~~~~~~~~
+== Delete data from database
 
 [source,mongo]
 ----
@@ -350,8 +335,7 @@ db.fightData.deleteMany({marker: "toDelete"})
 db.fightData.deleteMany({})
 ----
 
-Update data
-~~~~~~~~~~~
+== Update data
 
 Be worry about the update function, the first one replace all the
 filtered data:
@@ -402,8 +386,7 @@ db.flightData.update(
 )
 ----
 
-Replace Data
-~~~~~~~~~~~~
+== Replace Data
 
 [source,mongo]
 ----
@@ -426,8 +409,7 @@ db.flightData.replaceOne(
 )
 ----
 
-Nested documents
-~~~~~~~~~~~~~~~~
+== Nested documents
 
 [source,mongo]
 ----
@@ -445,13 +427,11 @@ db.flightData.updateMany(
 )
 ----
 
-Embedded documents and max document value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Embedded documents and max document value
 
 In MongoDB it’s possible to have at least 100 levels of nesting.
 Documents have a maximum size of 16MB.
 
-Mongo drivers
-~~~~~~~~~~~~~
+== Mongo drivers
 
 https://docs.mongodb.com/ecosystem/drivers/
