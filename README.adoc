@@ -4,6 +4,12 @@
 :Date: 26/06/2019
 :Revision: 0.1.0
 
+== Introduction
+
+MongoDB enforces no schemas, so Documents don't have to use the same schema inside of one collection.
+
+*But* it recommended to Use some sort of schemas to prevent missusing of the Documents.
+
 == Install
 
 TIP: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/#install-mongodb-community-edition-using-deb-packages[Install Mongo on Ubuntu]
