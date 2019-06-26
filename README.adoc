@@ -1,4 +1,8 @@
 = NotesMongoDB
+:Author: Gabriele Puliti
+:Email: gabriele.puliti@gmail.com
+:Date: 26/06/2019
+:Revision: 0.1.0
 
 == Install
 
@@ -30,6 +34,8 @@ or
 mongod
 ----
 
+WARNING: to run the mongodb server it's necessary the sudoers permissions
+
 == Use mongo
 
 From another terminal run:
@@ -55,6 +61,8 @@ show dbs
 
 == Create new database
 
+A Database holds multiple Collections where each Collection can then hold multiple Documents.
+
 [source,mongo]
 ----
 use <name_of_new_database>
@@ -67,7 +75,27 @@ example:
 use shop
 ----
 
+== Reset/Delete Database
+
+To get rid of the datas:
+
+* load the database get rid of:
++
+[source,mongo]
+----
+use databaseName
+----
+* execute:
++
+[source,mongo]
+----
+db.dropDatabase()
+----
+
 == CRUD operations
+
+MongoDB offers multiples CRUD operations for single-document and bulk actions.
+Some methods require an argument and others don't.
 
 * Create:
 +
@@ -121,9 +149,13 @@ deleteMany(filter, options)
 
 == Insert data to database
 
+A Document can't directly be insered into a Database, you need to use a Colleciton.
+Each document needs a unique ID, if is not given the engine of mongo will create it for us.
+It's possible to have embedded docuemnts and array fields.
+
 [source,mongo]
 ----
-db.<name_of_data>.insertOne({"key0":value0, key1:value1})
+db.<name_of_collection>.insertOne({"key0":value0, key1:value1})
 ----
 
 The values type can be:
@@ -136,7 +168,7 @@ The values type can be:
 
 example:
 
-[source,mongo]
+[source,json]
 ----
 db.products.insertOne({
     name: "computer",
@@ -154,7 +186,7 @@ db.products.insertOne({
 
 [source,mongo]
 ----
-db.<name_of_data>.insertMany([
+db.<name_of_collection>.insertMany([
     {
         "key0":"value0",
         key1:"value1"
@@ -192,16 +224,18 @@ db.flightData.insertMany([
 
 === Find
 
+CAUTION: The find method return a cursor and not a list of documents, because the documents retrive can be thousand and it's more easy to transfert over the net. It can be also possible to use filters to limit the number of documents retrive, or projection to limit the set of fields.
+
 [source,mongo]
 ----
-db.<name_of_data>.find(filters, options)
+db.<name_of_collection>.find(filters, options)
 ----
 
 To beautify the results it can be use the pretty function:
 
 [source,mongo]
 ----
-db.<name_of_data>.find(filter, options).pretty()
+db.<name_of_collection>.find(filter, options).pretty()
 ----
 
 example:
@@ -213,7 +247,7 @@ db.products.find().pretty()
 
 [source,mongo]
 ----
-db.<name_of_data>.find({intercontinental: true}).pretty()
+db.<name_of_collection>.find({intercontinental: true}).pretty()
 ----
 
 [source,mongo]
@@ -242,7 +276,7 @@ db.passengers.find({}, {name:1}).pretty()
 
 [source,mongo]
 ----
-db.<name_of_data>.findOne()
+db.<name_of_collection>.findOne()
 ----
 
 example:
@@ -315,7 +349,7 @@ Output:
 
 [source,mongo]
 ----
-db.<name_of_data>.deleteOne({key_filter: value_filter})
+db.<name_of_collection>.deleteOne({key_filter: value_filter})
 ----
 
 example:
@@ -335,6 +369,13 @@ db.fightData.deleteMany({marker: "toDelete"})
 db.fightData.deleteMany({})
 ----
 
+== Drop collection
+
+[source,mongo]
+----
+db.<name_of_collection>.drop()
+----
+
 == Update data
 
 Be worry about the update function, the first one replace all the
@@ -342,7 +383,7 @@ filtered data:
 
 [source,mongo]
 ----
-db.<name_of_data>.update(
+db.<name_of_collection>.update(
     {key_filter: value_filter},
     {key_update: value_update}
 )
@@ -352,7 +393,7 @@ This second type of update need a option:
 
 [source,mongo]
 ----
-db.<name_of_data>.updateOne(
+db.<name_of_collection>.updateOne(
     {key_filter: value_filter},
     {$option: {key_update: value_update}}
 )
@@ -390,7 +431,7 @@ db.flightData.update(
 
 [source,mongo]
 ----
-db.<name_of_data>.replaceOne(filter, options)
+db.<name_of_collection>.replaceOne(filter, options)
 ----
 
 example:
@@ -435,3 +476,199 @@ Documents have a maximum size of 16MB.
 == Mongo drivers
 
 https://docs.mongodb.com/ecosystem/drivers/
+
+== Exercises
+
+=== Exercise 0
+
+.Introduction
+Create a database of patients, every patient need to have this arguments:
+
+* firstName
+* lastName
+* age
+* history
+** disease
+** treatment
+
+.Task
+For this exercise the requests are:
+
+. Create database of patients and call it `patients`
+. Insert 3 patient records with at least 1 history entry per patient
+. Update patient data of 1 patient with new age, name and history entry
+. Find all patients who are older than 30 (or a value of your choice)
+. Delete all patients who got a cold as a disease
+
+.Solution
+The first thing to do is to set up the mongodb server using the terminal and run this command:
+
+[source,bash]
+----
+sudo mongod
+----
+
+Then open another terminal and run the mongo client with:
+
+[source,bash]
+----
+mongo
+----
+
+IMPORTANT: The mongo client don't need the root permission to write into the database
+
+Let's create the database of patients:
+
+[source,mongo]
+----
+use patients
+----
+
+Output:
+[source,mongo]
+----
+switched to db patients
+----
+
+NOTE: This solve the first request
+
+Now we can populate the DB with 3 patient:
+
+[source,mongo]
+----
+db.patient.insertMany([
+	{
+		"firstName": "Gabriele",
+		"lastName": "Puliti",
+		"age": 26,
+		"history": [
+			{
+				"disease": "cold",
+				"treatment": "001"
+			},
+			{
+				"disease": "headache",
+				"treatment": "023"
+			}
+		]
+	},
+	{
+		"firstName": "Dario",
+		"lastName": "Scida",
+		"age": 29,
+		"history": [
+			{
+				"disease": "stomachache",
+				"treatment": "025"
+			}
+		]
+	},
+	{
+		"firstName": "Andrea",
+		"lastName": "Amico",
+		"age": 29,
+		"history": [
+			{
+				"disease": "malignant herpes",
+				"treatment": "250"
+			}
+		]
+	}
+])
+----
+
+Output:
+[source,mongo]
+----
+{
+	"acknowledged" : true,
+	"insertedIds" : [
+		ObjectId("5d1330a5aa6a78bdbaf6df77"),
+		ObjectId("5d1330a5aa6a78bdbaf6df78"),
+		ObjectId("5d1330a5aa6a78bdbaf6df79")
+	]
+}
+----
+
+NOTE: This solve the second request
+
+One of the patients is set wrong in the DB, we need to change it using update:
+
+[source, mongo]
+----
+db.patient.updateOne(
+	{"_id" : ObjectId("5d1330a5aa6a78bdbaf6df79")},
+	{$set:
+		{
+			"firstName":"Andrew",
+			"lastName":"Friend",
+			"age": 58,
+			"history": [
+				{
+					"disease": "cough",
+					"treatment": "003"
+				},
+				{
+					"disease": "cold",
+					"treatment": "001"
+				}
+			]
+		}
+	}
+)
+----
+
+Output:
+[source, mongo]
+----
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+----
+
+NOTE: This solve the third request
+
+To find all the patient that are older than 30 we need to use the find with the grater than condition:
+
+[source,mongo]
+----
+db.patient.find({"age":{$gt:30}}).pretty()
+----
+
+Output:
+[source,mongo]
+----
+{
+	"_id" : ObjectId("5d1330a5aa6a78bdbaf6df79"),
+	"firstName" : "Andrew",
+	"lastName" : "Friend",
+	"age" : 58,
+	"history" : [
+		{
+			"disease" : "cough",
+			"treatment" : "003"
+		},
+		{
+			"disease" : "cold",
+			"treatment" : "001"
+		}
+	]
+}
+----
+
+NOTE: This solve the fourth request
+
+The patients with cold can be discharged, it's necessary to remove from DB:
+
+[source,mongo]
+----
+db.patient.deleteMany({"history.disease":"cold"})
+----
+
+Output:
+[source,mongo]
+----
+{ "acknowledged" : true, "deletedCount" : 2 }
+----
+
+NOTE: This solve the last request
+
+
