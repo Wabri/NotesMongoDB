@@ -168,7 +168,7 @@ The values type can be:
 
 example:
 
-[source,json]
+[source,mongo]
 ----
 db.products.insertOne({
     name: "computer",
@@ -578,7 +578,7 @@ db.patient.insertMany([
 ----
 
 Output:
-[source,mongo]
+[source,json]
 ----
 {
 	"acknowledged" : true,
@@ -619,7 +619,7 @@ db.patient.updateOne(
 ----
 
 Output:
-[source, mongo]
+[source, json]
 ----
 { "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
 ----
@@ -634,7 +634,7 @@ db.patient.find({"age":{$gt:30}}).pretty()
 ----
 
 Output:
-[source,mongo]
+[source,json]
 ----
 {
 	"_id" : ObjectId("5d1330a5aa6a78bdbaf6df79"),
@@ -664,7 +664,7 @@ db.patient.deleteMany({"history.disease":"cold"})
 ----
 
 Output:
-[source,mongo]
+[source,json]
 ----
 { "acknowledged" : true, "deletedCount" : 2 }
 ----
