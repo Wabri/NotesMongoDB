@@ -153,7 +153,24 @@ deleteOne(filter, options)
 deleteMany(filter, options)
 ----
 
-== Insert data to database
+== Insert datas to database
+
+MongoDB is schemaless so there are no restrictions to the type of data. It's possible to insert different schema of the same data, but this is not the best way to handle datas obviously.
+The most common way to use this database is to use a default type schema and let it free to add more keys.
+
+For example if we want to represent a product we can do with 3 different approches:
+
+[width="80%", option="header"]
+|=======================================================
+|Chaos | ------- | SQL world |
+| {
+"title" : "Book",
+"price": 12.99
+} | { "title" : "Book", "price": 12.99 } | { "title" : "Book", "price": 12.99 } |
+| { "title" : "Bottle", "available": true } | { "title" : "Bottle", "price": 12.99, "available": true } | { "title" : "Bottle", "price": 12.99 } |
+|=======================================================
+
+=== Insert one
 
 A Document can't directly be insered into a Database, you need to use a Colleciton.
 Each document needs a unique ID, if is not given the engine of mongo will create it for us.
@@ -166,11 +183,19 @@ db.<name_of_collection>.insertOne({"key0":value0, key1:value1})
 
 The values type can be:
 
-* *String*
+* *Text* -> "Max"
 * *Number*
-* *Boolean*
-* *Object*
-* *Array*
+** *Integer* (int32) -> 55
+** *NumberLong* (int64) -> 1000000000000000
+** *NumberDecimal* -> 12.99
+* *Boolean* -> true
+* *ObjectId* -> ObjectId("sfasd")
+* *ISODate* -> ISOData("2019-07-01")
+* *Timestamp* -> Timestamp(11421532)
+* *Embedded Document* -> {"a": {...} }
+* *Array* -> {"a": [...] }
+
+
 
 example:
 
@@ -188,7 +213,52 @@ db.products.insertOne({
 })
 ----
 
-== Insert many datas to database
+[source,mongo]
+----
+db.companies.insertOne({
+	name: "Fresh Apples Inc",
+	isStartup: true,
+	emplyees: 33,
+	funding: 12345678901234567890,
+	details: {
+		ceo: "Gabriele Puliti",
+		tags: [
+			{title: "super"},
+			{title: "perfect"}
+		]
+	},
+	foundingData: new Date(),
+	insertedAt: new Timestamp()
+})
+----
+
+== Data Types & Limits
+
+MongoDB has a couple of hard limits - most importantly, a single document in a collection (including all embedded documents it might have) must be < = 16mb. Additionally, you may only have 100 levels of embedded documents.
+
+You can find all limits (in great detail) here: https://docs.mongodb.com/manual/reference/limits/[limits]
+
+For the data types, MongoDB supports, you find a detailed overview on this page: https://docs.mongodb.com/manual/reference/bson-types/[bson-types]
+
+Important data type limits are:
+
+* Normal integers (int32) can hold a maximum value of +-2,147,483,647
+
+* Long integers (int64) can hold a maximum value of +-9,223,372,036,854,775,807
+
+Text can be as long as you want - the limit is the 16mb restriction for the overall document.
+
+It's also important to understand the difference between int32 (NumberInt), int64 (NumberLong) and a normal number as you can enter it in the shell. The same goes for a normal double and NumberDecimal.
+
+* NumberInt creates a int32 value => NumberInt(55)
+
+* NumberLong creates a int64 value => NumberLong(7489729384792)
+
+If you just use a number (e.g. insertOne({a: 1}), this will get added as a normal double into the database. The reason for this is that the shell is based on JS which only knows float/ double values and doesn't differ between integers and floats.
+
+NumberDecimal creates a high-precision double value => NumberDecimal("12.99") => This can be helpful for cases where you need (many) exact decimal places for calculations.
+
+=== Insert many
 
 [source,mongo]
 ----
@@ -479,9 +549,131 @@ db.flightData.updateMany(
 In MongoDB it’s possible to have at least 100 levels of nesting.
 Documents have a maximum size of 16MB.
 
+== Get informations about database
+
+To get infos about the database in use we need to use the stats method:
+
+[source, mongo]
+----
+db.stats()
+----
+
+The result will be something like this:
+
+[source, mongo]
+----
+{
+	"db" : "companyData",
+	"collections" : 2,
+	"views" : 0,
+	"objects" : 2,
+	"avgObjSize" : 136.5,
+	"dataSize" : 273,
+	"storageSize" : 32768,
+	"numExtents" : 0,
+	"indexes" : 2,
+	"indexSize" : 32768,
+	"fsUsedSize" : 49097785344,
+	"fsTotalSize" : 238644428800,
+	"ok" : 1
+}
+
+----
+
+With this method we can analize the usage of the memory for different type of data. Let's create a new empty databases and create a new collection with only one entry like this:
+
+[source, mongo]
+----
+db.number.insertOne({a: 1})
+----
+
+Now call the stats method of database and observe the dataSize value:
+
+[source, mongo]
+----
+{
+	"db" : "numbers",
+	"collections" : 1,
+	"views" : 0,
+	"objects" : 1,
+	"avgObjSize" : 33,
+	"dataSize" : 33,
+	"storageSize" : 16384,
+	"numExtents" : 0,
+	"indexes" : 1,
+	"indexSize" : 16384,
+	"fsUsedSize" : 49104764928,
+	"fsTotalSize" : 238644428800,
+	"ok" : 1
+}
+----
+
+The collection with only one int key is 33 bit. Now delete it with deleteMany({}) and create the same element but change the name of a:
+
+[source, mongo]
+----
+db.number.insertOne({a: NumberInt(1)})
+----
+
+Now the dataSize will be less:
+
+[source, mongo]
+----
+{
+	"db" : "companyData",
+	"collections" : 1,
+	"views" : 0,
+	"objects" : 1,
+	"avgObjSize" : 29,
+	"dataSize" : 29,
+	"storageSize" : 20480,
+	"numExtents" : 0,
+	"indexes" : 1,
+	"indexSize" : 20480,
+	"fsUsedSize" : 49092698112,
+	"fsTotalSize" : 238644428800,
+	"ok" : 1
+}
+----
+
+The default type of numbers using by mongo are 4 bit longer than the NumberInt type.
+
 == Mongo drivers
 
-https://docs.mongodb.com/ecosystem/drivers/
+All the infos can be found here: https://docs.mongodb.com/ecosystem/drivers/[drivers]
+
+== Variables
+
+In the mongo console it's possible to use variables with the same syntax of javascript:
+
+[source,mongo]
+----
+var <name_of_variable> = <query>
+----
+
+.example:
+
+[source,mongo]
+----
+db.patients.insertOne({name: "Nax", age: 29, diseaseSummary: "summary-max-1"})
+db.diseaseSummaries.insertOne({_id: "summary-max-1", "diseases: ["cold", "broken leg"]})
+var dsid = db.patients.findOne().diseaseSummary
+dsid
+----
+
+The output of the last command will be this:
+
+[source, mongo]
+----
+summary-max-1
+----
+
+Obviously it possible to use this variable inside queries:
+
+[source, mongo]
+----
+db.diseaseSummaries.findOne({_id: dsid})
+----
 
 == Exercises
 
