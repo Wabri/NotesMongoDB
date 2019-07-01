@@ -675,11 +675,96 @@ Obviously it possible to use this variable inside queries:
 db.diseaseSummaries.findOne({_id: dsid})
 ----
 
+== Joining with $lookup
+
+This is usefull when you have relationships between documents, for example you have a costumer with a reference to the favourite books:
+
+.books
+[source, json]
+----
+{
+	"_id" : ObjectId("5d1a0bbf0118327c0251e7a1"),
+	"name" : "My favourite Book",
+	"authors" : [
+		ObjectId("5d1a0a490118327c0251e79f"),
+		ObjectId("5d1a0a490118327c0251e7a0")
+	]
+}
+----
+
+.authors
+[source, json]
+----
+{
+	"_id" : ObjectId("5d1a0a490118327c0251e79f"),
+	"name" : "Max Schwarz",
+	"age" : 29,
+	"address" : {
+		"street" : "Main"
+	}
+}
+{
+	"_id" : ObjectId("5d1a0a490118327c0251e7a0"),
+	"name" : "Manuel Lore",
+	"age" : 30,
+	"address" : {
+		"street" : "Tree"
+	}
+}
+----
+
+The syntax of the aggregate method is:
+
+[source,mongo]
+----
+db.<name_of_document>.aggregate([{$lookup: {from: <external_document>, localField: <local_name_field>, foreignField: <name_of_foreign_key>, as: <alias>}}])
+----
+
+In our example:
+
+[source,mongo]
+----
+db.books.aggregate([{$lookup: {from: 'authors', localField: 'authors', foreignField: '_id', as: 'creators'}}]).pretty()
+----
+
+The output will be:
+
+[source,mongo]
+----
+{
+	"_id" : ObjectId("5d1a0bbf0118327c0251e7a1"),
+	"name" : "My favourite Book",
+	"authors" : [
+		ObjectId("5d1a0a490118327c0251e79f"),
+		ObjectId("5d1a0a490118327c0251e7a0")
+	],
+	"creators" : [
+		{
+			"_id" : ObjectId("5d1a0a490118327c0251e79f"),
+			"name" : "Max Schwarz",
+			"age" : 29,
+			"address" : {
+				"street" : "Main"
+			}
+		},
+		{
+			"_id" : ObjectId("5d1a0a490118327c0251e7a0"),
+			"name" : "Manuel Lore",
+			"age" : 30,
+			"address" : {
+				"street" : "Tree"
+			}
+		}
+	]
+}
+----
+
+
 == Exercises
 
 === Exercise 0
 
-.Introduction
+.*Introduction*
 Create a database of patients, every patient need to have this arguments:
 
 * firstName
@@ -689,7 +774,7 @@ Create a database of patients, every patient need to have this arguments:
 ** disease
 ** treatment
 
-.Task
+.*Task*
 For this exercise the requests are:
 
 . Create database of patients and call it `patients`
@@ -698,7 +783,7 @@ For this exercise the requests are:
 . Find all patients who are older than 30 (or a value of your choice)
 . Delete all patients who got a cold as a disease
 
-.Solution
+.*Solution*
 The first thing to do is to set up the mongodb server using the terminal and run this command:
 
 [source,bash]
@@ -869,4 +954,112 @@ Output:
 
 NOTE: This solve the last request
 
+=== Exercise 1
 
+.*Introduction*
+Create a blog database where store this data:
+
+* User
+** _id
+** name
+** age
+** email
+* Post
+** _id
+** title
+** text
+** tag
+* Comment
+** _id
+** text
+
+With realtionships like this:
+
+* User => create => Post
+* User => comment => Post
+
+.*Task*
+Model this datas
+
+.*Solution*
+Create three different collections it can be too much, we can nested the comments inside the post and refer it to a user using the _id reference:
+
+I think that the default schema can be this:
+
+.user
+[source,json]
+----
+{
+	_id: ObjectId(),
+	name: string,
+	age: number,
+	email: string
+}
+----
+
+.post
+[source,json]
+----
+{
+	_id: ObjectId(),
+	title: string,
+	text: string,
+	tag: [],
+	creator: user._id,
+	comments: [
+		{
+			_id=user._id,
+			text: string
+		},{
+			_id=user._id,
+			text: string
+		}]
+}
+----
+
+Let's create the database:
+
+[source,mongo]
+----
+use blog
+----
+
+Than create the users collections:
+
+[source,mongo]
+----
+db.users.insertMany([
+	{
+		name: 'Max Schwarzmueller',
+		age: 29,
+		email: 'max@test.com'
+	},{
+		name: 'Manuel Lorenz',
+		age: 30,
+		email:'manu@test.com'
+	}
+])
+----
+
+And now the post:
+
+[source,mongo]
+----
+db.posts.insertOne({
+	title: 'My first Post!',
+	text: 'This is my first post, I hope you like it!',
+	tag: ['new', 'tech'],
+	creator: ObjectId("5d1a1e280118327c0251e7a3"),
+	comments: [{
+		text: 'I like this post!',
+		author: ObjectId("5d1a1e280118327c0251e7a2")
+	}]
+})
+----
+
+To aggregate the users to the post we can do this:
+
+[source,mongo]
+----
+db.posts.aggregate([{$lookup: {from: 'users', localField: 'creator', foreignField: '_id', as:'autore'}}]).pretty()
+----
