@@ -42,9 +42,73 @@ mongod
 
 WARNING: to run the mongodb server it's necessary the sudoers permissions
 
-== Use mongo
+To get all the help of mongod just run the --help:
 
-https://docs.mongodb.com/manual/reference/limits/[limits]
+[source, bash]
+----
+mongod --help
+----
+
+.examples
+
+[source, bash]
+----
+mongod --dbpath ~/dbs/testDB --logpath ~/dbs/testLog/log.log
+----
+
+IMPORTANT: the log file is important to retrive infos that will be lost without it.
+
+[source, bash]
+----
+mongod --fork --logpath ~/dbs/testLog/log.log
+----
+
+This command above starts the process of mongod as a child process and run in background.
+
+To stop this instance of mongoDB it's necessary to use the admin db and run, here the list of command to run to stop it:
+
+.on mongo shell
+[source, mongo]
+----
+use admin
+db.shutdownServer()
+----
+
+=== Configuration of mongo database
+
+It's obviously possible to create a configuration file of the mongodb.
+
+For example I will create a configuration file inside the directory of the dbs in my home directory:
+
+.linux bash
+[source, bash]
+----
+mkdir -p ~/dbs/testDB/
+cd ~/dbs/testDB/
+touch mongod.cfg
+----
+
+Open this file and edit by follow this link: https://docs.mongodb.com/manual/reference/configuration-options/[configuration-options]
+
+This file look like this:
+
+[source, properties]
+----
+storage:
+    dbPath: dbs/testDB
+systemLog:
+    destination: file
+    path: dbs/testLogs/log.log
+----
+
+To use this file it's necessary to define in the arguments of the mongod command:
+
+[source, bash]
+----
+mongod --config ~/dbs/testDB/mongod.cfg
+----
+
+== Use mongo
 
 From another terminal run:
 
@@ -196,8 +260,6 @@ The values type can be:
 * *Timestamp* -> Timestamp(11421532)
 * *Embedded Document* -> {"a": {...} }
 * *Array* -> {"a": [...] }
-
-_all of this types is in json format, for the BSON format see this: https://docs.mongodb.com/manual/reference/bson-types/[bson-types]
 
 example:
 
@@ -773,7 +835,7 @@ The syntax of the creation this restrictions is made with the createCollection m
 
 .It's more simple to present an example (this is refer to db of exercise 1)
 [source, mongo]
-====
+----
 db.createCollection('posts', {
 	validator: {
 		$jsonSchema: {
@@ -814,13 +876,13 @@ db.createCollection('posts', {
 		}
 	}
 });
-====
+----
 
 To replace a validation action it's necessary to use the database administrator method call runCommand:
 
 .for example we want to add a validation action warning
 [source, mongo]
-====
+----
 db.runCommand({
 	collMod: 'posts',
 	validator: {
@@ -863,9 +925,10 @@ db.runCommand({
 	},
 	validationAction: 'warn'
 });
-====
+----
 This new option added don't prevent the insert of a wrong element but create a warning on the log file of the database.
 
+==
 
 == Exercises
 
