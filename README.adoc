@@ -44,6 +44,8 @@ WARNING: to run the mongodb server it's necessary the sudoers permissions
 
 == Use mongo
 
+https://docs.mongodb.com/manual/reference/limits/[limits]
+
 From another terminal run:
 
 [source,mongo]
@@ -195,7 +197,7 @@ The values type can be:
 * *Embedded Document* -> {"a": {...} }
 * *Array* -> {"a": [...] }
 
-
+_all of this types is in json format, for the BSON format see this: https://docs.mongodb.com/manual/reference/bson-types/[bson-types]
 
 example:
 
@@ -758,6 +760,111 @@ The output will be:
 	]
 }
 ----
+
+== Validation
+
+https://docs.mongodb.com/manual/core/schema-validation/[docs validation]
+
+This is an important feature of mongoDB, this is used when we need to create schema of the datas.
+The schema validation of mongoDB is used when an application need a defined schema and we don't want to store useless data but data with defined structure.
+This operation is made by mongodb when a new data will be insert.
+
+The syntax of the creation this restrictions is made with the createCollection method:
+
+.It's more simple to present an example (this is refer to db of exercise 1)
+[source, mongo]
+====
+db.createCollection('posts', {
+	validator: {
+		$jsonSchema: {
+			bsonType: 'object',
+			required: ['title', 'text', 'creator', 'comments'],
+			properties: {
+				title: {
+					bsonType: 'string',
+					description: 'must be a string and is required'
+				},
+				text: {
+					bsonType: 'string',
+					description: 'must be a string and is required'
+				},
+				creator: {
+					bsonType: 'objectId',
+					description: 'must be a objectId and is required'
+				},
+				comments: {
+					bsonType: 'array',
+					description: 'must be an array and is required',
+					items: {
+						bsonType: 'object',
+						required: ['text', 'author'],
+						properties: {
+							text: {
+								bsonType: 'string',
+								description: 'must be a string and is required'
+							},
+							author: {
+								bsonType: 'objectId',
+								description: 'must be an obhectId and is required'
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+});
+====
+
+To replace a validation action it's necessary to use the database administrator method call runCommand:
+
+.for example we want to add a validation action warning
+[source, mongo]
+====
+db.runCommand({
+	collMod: 'posts',
+	validator: {
+		$jsonSchema: {
+			bsonType: 'object',
+			required: ['title', 'text', 'creator', 'comments'],
+			properties: {
+				title: {
+					bsonType: 'string',
+					description: 'must be a string and is required'
+				},
+				text: {
+					bsonType: 'string',
+					description: 'must be a string and is required'
+				},
+				creator: {
+					bsonType: 'objectId',
+					description: 'must be a objectId and is required'
+				},
+				comments: {
+					bsonType: 'array',
+					description: 'must be an array and is required',
+					items: {
+						bsonType: 'object',
+						required: ['text', 'author'],
+						properties: {
+							text: {
+								bsonType: 'string',
+								description: 'must be a string and is required'
+							},
+							author: {
+								bsonType: 'objectId',
+								description: 'must be an obhectId and is required'
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	validationAction: 'warn'
+});
+====
+This new option added don't prevent the insert of a wrong element but create a warning on the log file of the database.
 
 
 == Exercises
