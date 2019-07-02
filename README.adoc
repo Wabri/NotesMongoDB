@@ -95,11 +95,13 @@ This file look like this:
 [source, properties]
 ----
 storage:
-    dbPath: dbs/testDB
+    dbPath: /home/gab/dbs/testDB
 systemLog:
     destination: file
-    path: dbs/testLogs/log.log
+    path: /home/gab/dbs/testLogs/log.log
 ----
+
+WARNING: The link of the path need to be absolute
 
 To use this file it's necessary to define in the arguments of the mongod command:
 
@@ -107,6 +109,8 @@ To use this file it's necessary to define in the arguments of the mongod command
 ----
 mongod --config ~/dbs/testDB/mongod.cfg
 ----
+
+The configuration of mongo database can be usefull to define the portability of the application, you can transfer the configuration between server or pc.
 
 == Use mongo
 
@@ -162,6 +166,43 @@ use databaseName
 [source,mongo]
 ----
 db.dropDatabase()
+----
+
+== To get help
+
+There are multiple help commands on the mongo shell, the general purpose one:
+
+[source, mongo]
+----
+help
+----
+
+The output should be this:
+
+[source,mongo]
+----
+	db.help()                    help on db methods
+	db.mycoll.help()             help on collection methods
+	sh.help()                    sharding helpers
+	rs.help()                    replica set helpers
+	help admin                   administrative help
+	help connect                 connecting to a db help
+	help keys                    key shortcuts
+	help misc                    misc things to know
+	help mr                      mapreduce
+
+	show dbs                     show database names
+	show collections             show collections in current database
+	show users                   show users in current database
+	show profile                 show most recent system.profile entries with time >= 1ms
+	show logs                    show the accessible logger names
+	show log [name]              prints out the last segment of log in memory, 'global' is default
+	use <db_name>                set current database
+	db.foo.find()                list objects in collection foo
+	db.foo.find( { a : 1 } )     list objects in foo where a == 1
+	it                           result of the last line evaluated; use to further iterate
+	DBQuery.shellBatchSize = x   set default number of items to display on shell
+	exit                         quit the mongo shell
 ----
 
 == CRUD operations
@@ -358,6 +399,35 @@ db.flightData.insertMany([
         "intercontinental": false
     }
 ])
+----
+
+If one of the document already exists the method will throw an error and stop the creation of new documents. This beaviour can be change by using the option ordered:
+
+[source,mongo]
+----
+db.<name_of_collection>.insertMany([
+    {
+        "key0":"value0",
+        key1:"value1"
+    },
+    {
+        "key2":"value2",
+        key3:"value3"
+    }
+], {ordered: false})
+----
+
+The default value of this option is true, by set this value to false even if one of the document already exists in the collection the engine don't skip the insert of new data.
+
+Here an other examples;
+
+[source,mongo]
+----
+> db.hobbies.insertMany([
+	{_id: 'yoga', name: 'Yoga'},
+	{_id: 'cooking', name: 'Cooking'},
+	{_id: 'hiking', name: 'Hiking '}
+], {ordered: false})
 ----
 
 == Retrive data from database
@@ -928,7 +998,9 @@ db.runCommand({
 ----
 This new option added don't prevent the insert of a wrong element but create a warning on the log file of the database.
 
-==
+== Exploring datas graphically
+
+https://www.mongodb.com/download-center/compass[compass community software]
 
 == Exercises
 
